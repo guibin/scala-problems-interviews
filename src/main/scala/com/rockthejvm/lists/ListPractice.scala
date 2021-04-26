@@ -18,9 +18,9 @@ object ListPractice extends App {
     // get element at a given index
     def apply(index: Int): T
 
-//    // the size of the list
-//    def length: Int
-//
+    // the size of the list
+    def length: Int
+
 //    // reverse the list
 //    def reverse: RList[T]
 //
@@ -65,6 +65,7 @@ object ListPractice extends App {
     override def isEmpty: Boolean = true
     override def toString: String = "[]"
     override def apply(index: Int): Nothing = throw new IndexOutOfBoundsException
+    override def length: Int = 0
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -83,14 +84,29 @@ object ListPractice extends App {
 
     override def apply(index: Int): T = {
       @tailrec
-      def get(head: T, tail:RList[T], index: Int, target: Int): T = {
-        if (target == index) head
-        else if (target > index && !tail.isEmpty) get(tail.head, tail.tail, index + 1, target)
-        else throw new IndexOutOfBoundsException
+      def get(remaining: RList[T], currentIndex: Int): T = {
+        if (currentIndex == index) remaining.head
+        else get(remaining.tail, currentIndex + 1)
       }
 
-      get(head, tail, 0, index)
+      if (index < 0) throw new NoSuchElementException
+      get(this, 0)
+    }
+
+    override def length: Int = {
+      @tailrec
+      def tailRecLength(remaining: RList[T], currentLength: Int): Int = {
+        if (remaining == RNil) currentLength
+        else tailRecLength(remaining.tail, currentLength + 1)
+      }
+
+      tailRecLength(this, 0)
     }
   }
 
+  val list2 = 1 :: 2 :: 3 :: 4 :: RNil
+  println(list2(1))
+  println(list2)
+//  println(list2(6))
+  println(list2.length)
 }
