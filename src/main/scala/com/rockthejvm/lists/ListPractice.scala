@@ -10,6 +10,7 @@ object ListPractice extends App {
     def head: T
     def tail: RList[T]
     def isEmpty: Boolean
+    // prepend
     def ::[S >: T](elem: S): RList[S] = new ::(elem, this)
 
     /**
@@ -21,15 +22,15 @@ object ListPractice extends App {
     // the size of the list
     def length: Int
 
-//    // reverse the list
-//    def reverse: RList[T]
-//
-//    // concatenate another list to this one
-//    def ++[S >: T](anotherList: RList[S]): RList[S]
-//
-//    // remove an element at a given index, return a NEW list
-//    def removeAt(index: Int): RList[T]
-//
+    // reverse the list
+    def reverse: RList[T]
+
+    // concatenate another list to this one
+    def ++[S >: T](anotherList: RList[S]): RList[S]
+
+    // remove an element at a given index, return a NEW list
+    def removeAt(index: Int): RList[T]
+
 //    // the big 3
 //    def map[S](f: T => S): RList[S]
 //    def flatMap[S](f: T => RList[S]): RList[S]
@@ -66,6 +67,9 @@ object ListPractice extends App {
     override def toString: String = "[]"
     override def apply(index: Int): Nothing = throw new IndexOutOfBoundsException
     override def length: Int = 0
+    override def reverse: RList[Nothing] = this
+    override def ++[S >: Nothing](anotherList: RList[S]): RList[S] = anotherList
+    override def removeAt(index: Int): RList[Nothing] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -102,6 +106,52 @@ object ListPractice extends App {
 
       tailRecLength(this, 0)
     }
+
+    override def reverse: RList[T] = {
+      @tailrec
+      def reverseTailRec(reversed: RList[T], tl: RList[T]): RList[T] = {
+        tl match {
+          case RNil => reversed
+          case remaining => reverseTailRec(remaining.head :: reversed, remaining.tail)
+        }
+      }
+      reverseTailRec(RNil, this)
+    }
+
+    override def ++[S >: T](anotherList: RList[S]): RList[S] = {
+      @tailrec
+      def concatTailRec(remaining: RList[S], acc: RList[S]): RList[S] = {
+        if (remaining.isEmpty) acc
+        else {
+          concatTailRec(remaining.tail, remaining.head :: acc)
+        }
+      }
+
+      concatTailRec(this.reverse, anotherList)
+    }
+
+    override def removeAt(index: Int): RList[T] = {
+      @tailrec
+      def removeTailRec(currentIdx: Int, first: RList[T], remaining: RList[T]): RList[T] = {
+        if (currentIdx == index) remaining.reverse ++ first.tail
+        else {
+          removeTailRec(currentIdx + 1, first.tail, first.head :: remaining)
+        }
+      }
+
+      removeTailRec(0, this, RNil)
+    }
+  }
+
+  object RList {
+    def from[T](iterable: Iterable[T]): RList[T] = {
+      @tailrec
+      def fromRec(acc: RList[T], remaining: Iterable[T]): RList[T] = {
+        if (remaining.isEmpty) acc
+        else fromRec(remaining.head :: acc, remaining.tail)
+      }
+      fromRec(RNil, iterable).reverse
+    }
   }
 
   val list2 = 1 :: 2 :: 3 :: 4 :: RNil
@@ -109,4 +159,8 @@ object ListPractice extends App {
   println(list2)
 //  println(list2(6))
   println(list2.length)
+  println(list2.reverse)
+  println(RList.from(Range(1, 10)))
+  println(RList.from(1 to 10) ++ RList.from(20 to 30))
+  println(RList.from(1 to 10).removeAt(3))
 }
