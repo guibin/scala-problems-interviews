@@ -1,6 +1,9 @@
 package com.rockthejvm.lists
 
+import java.security.InvalidParameterException
+
 import scala.annotation.tailrec
+import scala.runtime.Nothing$
 
 object ListPractice extends App {
   sealed abstract class RList[+T] {
@@ -36,18 +39,18 @@ object ListPractice extends App {
     def flatMap[S](f: T => RList[S]): RList[S]
     def filter(f: T => Boolean): RList[T]
 
-//    /**
-//      * Medium difficulty problems
-//      */
-//    // run-length encoding
-//    def rle: RList[(T, Int)]
-//
-//    // duplicate each element a number of times in a row
-//    def duplicateEach(k: Int): RList[T]
-//
-//    // rotation by a number of positions to the left
-//    def rotate(k: Int): RList[T]
-//
+    /**
+      * Medium difficulty problems
+      */
+    // run-length encoding
+    def rle: RList[(T, Int)]
+
+    // duplicate each element a number of times in a row
+    def duplicateEach(k: Int): RList[T]
+
+    // rotation by a number of positions to the left
+    def rotate(k: Int): RList[T]
+
 //    // random sample
 //    def sample(k: Int): RList[T]
 //
@@ -73,6 +76,9 @@ object ListPractice extends App {
     override def map[S](f: Nothing => S): RList[S] = this
     override def flatMap[S](f: Nothing => RList[S]): RList[S] = this
     override def filter(f: Nothing => Boolean): RList[Nothing] = this
+    override def rle: RList[(Nothing, Int)] = this
+    override def duplicateEach(k: Int): RList[Nothing] = this
+    override def rotate(k: Int): RList[Nothing] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -157,6 +163,7 @@ object ListPractice extends App {
       mapTailRec(this, RNil)
     }
 
+    // TODO: this is O(N^2) complexity, needs to be improved
     override def flatMap[S](f: T => RList[S]): RList[S] = {
       @tailrec
       def flatMapTailRec(remaining: RList[T], acc: RList[S]): RList[S] = {
@@ -182,6 +189,57 @@ object ListPractice extends App {
 
       filterTailRec(this, RNil)
     }
+
+    /**
+      * Medium difficulty problems
+      */
+    override def rle: RList[(T, Int)] = {
+      @tailrec
+      def rleTailRec(remaining: RList[T], acc: RList[(T, Int)]): RList[(T, Int)] = {
+        if (remaining.isEmpty) acc.reverse
+        else if (acc.isEmpty){
+          rleTailRec(remaining.tail, (remaining.head, 1) :: RNil)
+        } else if (acc.head._1 == remaining.head) {
+          rleTailRec(remaining.tail, (acc.head._1, acc.head._2 + 1) :: acc.tail)
+        } else {
+          rleTailRec(remaining.tail, (remaining.head, 1) :: acc)
+        }
+      }
+
+      rleTailRec(this, RNil)
+    }
+
+    override def duplicateEach(k: Int): RList[T] = {
+      @tailrec
+      def duplicateEachTailRec(remaining: RList[T], currCount: Int, currItem: T, acc: RList[T]): RList[T] = {
+        if (remaining.isEmpty) {
+          if (currCount == 0) acc.reverse
+          else duplicateEachTailRec(remaining, currCount - 1, currItem, currItem :: acc)
+        } else {
+          if (currCount == 0) duplicateEachTailRec(remaining.tail, k, remaining.head, acc)
+          else duplicateEachTailRec(remaining, currCount - 1, currItem, currItem :: acc)
+        }
+      }
+
+      if (this.isEmpty && k < 0) RNil
+      else if (k == 0) this
+      else duplicateEachTailRec(this.tail, k, this.head, RNil)
+    }
+
+    override def rotate(k: Int): RList[T] = {
+      @tailrec
+      def rotateTailRec(remaining: RList[T], currCount: Int, acc: RList[T]): RList[T] = {
+        if (remaining.isEmpty) acc
+        else if (currCount == 0) remaining ++ (acc.reverse)
+        else {
+          rotateTailRec(remaining.tail, currCount - 1, remaining.head :: acc)
+        }
+      }
+
+      if (k < 0) throw new InvalidParameterException
+      else if (k == 0) this
+      else rotateTailRec(this, k, RNil)
+    }
   }
 
   object RList {
@@ -195,7 +253,7 @@ object ListPractice extends App {
     }
   }
 
-  val list2 = 1 :: 2 :: 3 :: 4 :: RNil
+  val list2 = 1 :: 2 :: 3 :: 3 :: 3 :: 2 :: 2 :: 4 :: RNil
   println(list2(1))
   println(list2)
 //  println(list2(6))
@@ -208,5 +266,10 @@ object ListPractice extends App {
   println(RList.from(1 to 1000).map(_ * 2))
   println(RList.from(1 to 1000).flatMap(x => (x + 3) :: RNil))
   println(RList.from(1 to 1000).filter(_ % 2 == 0))
-
+  println(list2.rle)
+  println(RNil.rle)
+  println((2::3::2::4::RNil).duplicateEach(0))
+  Range(1, 21).foreach { x =>
+    println(RList.from(1 to 20).rotate(x))
+  }
 }
