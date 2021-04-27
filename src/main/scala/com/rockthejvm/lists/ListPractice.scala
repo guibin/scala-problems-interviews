@@ -31,11 +31,11 @@ object ListPractice extends App {
     // remove an element at a given index, return a NEW list
     def removeAt(index: Int): RList[T]
 
-//    // the big 3
-//    def map[S](f: T => S): RList[S]
-//    def flatMap[S](f: T => RList[S]): RList[S]
-//    def filter(f: T => Boolean): RList[T]
-//
+    // the big 3
+    def map[S](f: T => S): RList[S]
+    def flatMap[S](f: T => RList[S]): RList[S]
+    def filter(f: T => Boolean): RList[T]
+
 //    /**
 //      * Medium difficulty problems
 //      */
@@ -70,6 +70,9 @@ object ListPractice extends App {
     override def reverse: RList[Nothing] = this
     override def ++[S >: Nothing](anotherList: RList[S]): RList[S] = anotherList
     override def removeAt(index: Int): RList[Nothing] = this
+    override def map[S](f: Nothing => S): RList[S] = this
+    override def flatMap[S](f: Nothing => RList[S]): RList[S] = this
+    override def filter(f: Nothing => Boolean): RList[Nothing] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -141,6 +144,44 @@ object ListPractice extends App {
 
       removeTailRec(0, this, RNil)
     }
+
+    override def map[S](f: T => S): RList[S] = {
+      @tailrec
+      def mapTailRec(remaining: RList[T], acc: RList[S]): RList[S] = {
+        if(remaining.isEmpty) acc.reverse
+        else {
+          mapTailRec(remaining.tail, f(remaining.head) :: acc)
+        }
+      }
+
+      mapTailRec(this, RNil)
+    }
+
+    override def flatMap[S](f: T => RList[S]): RList[S] = {
+      @tailrec
+      def flatMapTailRec(remaining: RList[T], acc: RList[S]): RList[S] = {
+        if (remaining.isEmpty) acc
+        else {
+          flatMapTailRec(remaining.tail, acc ++ f(remaining.head))
+        }
+      }
+
+      flatMapTailRec(this, RNil)
+    }
+
+    override def filter(f: T => Boolean): RList[T] = {
+      @tailrec
+      def filterTailRec(remaining: RList[T], acc: RList[T]): RList[T] = {
+        if (remaining.isEmpty) acc.reverse
+        else if (f(remaining.head)){
+          filterTailRec(remaining.tail, remaining.head :: acc)
+        } else {
+          filterTailRec(remaining.tail, acc)
+        }
+      }
+
+      filterTailRec(this, RNil)
+    }
   }
 
   object RList {
@@ -163,4 +204,9 @@ object ListPractice extends App {
   println(RList.from(Range(1, 10)))
   println(RList.from(1 to 10) ++ RList.from(20 to 30))
   println(RList.from(1 to 10).removeAt(3))
+  println("----")
+  println(RList.from(1 to 1000).map(_ * 2))
+  println(RList.from(1 to 1000).flatMap(x => (x + 3) :: RNil))
+  println(RList.from(1 to 1000).filter(_ % 2 == 0))
+
 }
