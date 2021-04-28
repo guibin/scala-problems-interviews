@@ -3,7 +3,7 @@ package com.rockthejvm.lists
 import java.security.InvalidParameterException
 
 import scala.annotation.tailrec
-import scala.runtime.Nothing$
+import scala.util.Random
 
 object ListPractice extends App {
   sealed abstract class RList[+T] {
@@ -51,9 +51,9 @@ object ListPractice extends App {
     // rotation by a number of positions to the left
     def rotate(k: Int): RList[T]
 
-//    // random sample
-//    def sample(k: Int): RList[T]
-//
+    // random sample
+    def sample(k: Int): RList[T]
+
 //    /**
 //      * Hard problems
 //      */
@@ -79,6 +79,7 @@ object ListPractice extends App {
     override def rle: RList[(Nothing, Int)] = this
     override def duplicateEach(k: Int): RList[Nothing] = this
     override def rotate(k: Int): RList[Nothing] = this
+    override def sample(k: Int): RList[Nothing] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -136,6 +137,8 @@ object ListPractice extends App {
         }
       }
 
+      // reverse is O(M), concatTailRec is O(M), M is length of this list
+      // so the complexity is O(2M)
       concatTailRec(this.reverse, anotherList)
     }
 
@@ -164,13 +167,21 @@ object ListPractice extends App {
     }
 
     // TODO: this is O(N^2) complexity, needs to be improved
+
     override def flatMap[S](f: T => RList[S]): RList[S] = {
+      // traverse the whole list: O(N)
+      // during each traverse, ++ is O(M)
+      // So the complexity is O(Z^2), Z is sum length of f(...)
       @tailrec
       def flatMapTailRec(remaining: RList[T], acc: RList[S]): RList[S] = {
         if (remaining.isEmpty) acc
         else {
           flatMapTailRec(remaining.tail, acc ++ f(remaining.head))
         }
+      }
+      // TODO implement this with O(N) complexity
+      def betterMapTailRec(remaining: RList[T], acc: RList[S]): RList[T] = {
+        ???
       }
 
       flatMapTailRec(this, RNil)
@@ -240,6 +251,37 @@ object ListPractice extends App {
       else if (k == 0) this
       else rotateTailRec(this, k, RNil)
     }
+
+    override def sample(k: Int): RList[T] = {
+      @tailrec
+      def sampleTailRec(remaining: RList[T], currentCount: Int, acc: RList[T]): RList[T] = {
+        if (currentCount == 0) acc.reverse
+        else if (remaining.isEmpty) acc.reverse
+        else {
+          val remainingLen = remaining.length
+          // The same item could only be selected once
+          val randomIdx = Random.nextInt(remainingLen)
+          val randomNode = remaining(randomIdx)
+          sampleTailRec(remaining.removeAt(randomIdx), currentCount - 1, randomNode :: acc)
+        }
+      }
+
+      val length = this.length
+      def elegantSample(): RList[T] = {
+        val randomed = Range(1, k).map { _ =>
+          // The same item could be selected multiple times
+          val idx = Random.nextInt(length)
+          apply(idx)
+        }
+        RList.from(randomed)
+      }
+
+      if (k < 0) RNil
+      else {
+//        sampleTailRec(this, k, RNil)
+        elegantSample()
+      }
+    }
   }
 
   object RList {
@@ -271,5 +313,9 @@ object ListPractice extends App {
   println((2::3::2::4::RNil).duplicateEach(0))
   Range(1, 21).foreach { x =>
     println(RList.from(1 to 20).rotate(x))
+  }
+  println("Random RList")
+  Range(1, 20).foreach { x =>
+    println(RList.from(1 to 20).sample(6))
   }
 }
