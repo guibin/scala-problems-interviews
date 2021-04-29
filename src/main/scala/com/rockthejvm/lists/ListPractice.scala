@@ -180,8 +180,15 @@ object ListPractice extends App {
         }
       }
       // TODO implement this with O(N) complexity
-      def betterMapTailRec(remaining: RList[T], acc: RList[S]): RList[T] = {
-        ???
+      def betterMapTailRec(remaining: RList[T], acc: RList[RList[S]]): RList[S] = {
+        if (remaining.isEmpty) concatenateAll(acc)
+        else {
+          betterMapTailRec(remaining.tail, f(remaining.head) :: acc)
+        }
+      }
+
+      def concatenateAll(elements: RList[RList[S]]): RList[S] = {
+        // TODO here
       }
 
       flatMapTailRec(this, RNil)
@@ -306,7 +313,8 @@ object ListPractice extends App {
   println(RList.from(1 to 10).removeAt(3))
   println("----")
   println(RList.from(1 to 1000).map(_ * 2))
-  println(RList.from(1 to 1000).flatMap(x => (x + 3) :: RNil))
+  println("flatMap---")
+  println(RList.from(1 to 1000).flatMap(x => (x + 3) :: (x * 2) :: RNil))
   println(RList.from(1 to 1000).filter(_ % 2 == 0))
   println(list2.rle)
   println(RNil.rle)
