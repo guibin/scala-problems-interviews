@@ -166,7 +166,7 @@ object ListPractice extends App {
       mapTailRec(this, RNil)
     }
 
-    // TODO: this is O(N^2) complexity, needs to be improved
+    // TODO: this is O(N^2) complexity, needs to be improved. betterMapTailRec is implemented as O(N)
 
     override def flatMap[S](f: T => RList[S]): RList[S] = {
       // traverse the whole list: O(N)
@@ -179,19 +179,29 @@ object ListPractice extends App {
           flatMapTailRec(remaining.tail, acc ++ f(remaining.head))
         }
       }
-      // TODO implement this with O(N) complexity
+
+      // Implement this with O(N) complexity
+      @tailrec
       def betterMapTailRec(remaining: RList[T], acc: RList[RList[S]]): RList[S] = {
         if (remaining.isEmpty) concatenateAll(acc)
         else {
-          betterMapTailRec(remaining.tail, f(remaining.head) :: acc)
+          betterMapTailRec(remaining.tail, f(remaining.head).reverse :: acc)
         }
       }
 
+      // concatenateAll behaves like flatten
       def concatenateAll(elements: RList[RList[S]]): RList[S] = {
-        // TODO here
+        @tailrec
+        def concatenateAllTailRec(remaining: RList[RList[S]], current: RList[S], acc: RList[S]): RList[S] = {
+          if (remaining.isEmpty && current.isEmpty) acc
+          else if (!remaining.isEmpty && current.isEmpty) concatenateAllTailRec(remaining.tail, remaining.head, acc)
+          else concatenateAllTailRec(remaining, current.tail, current.head :: acc)
+        }
+        concatenateAllTailRec(elements, RNil, RNil)
       }
 
-      flatMapTailRec(this, RNil)
+//      flatMapTailRec(this, RNil)
+      betterMapTailRec(this, RNil)
     }
 
     override def filter(f: T => Boolean): RList[T] = {
@@ -314,7 +324,8 @@ object ListPractice extends App {
   println("----")
   println(RList.from(1 to 1000).map(_ * 2))
   println("flatMap---")
-  println(RList.from(1 to 1000).flatMap(x => (x + 3) :: (x * 2) :: RNil))
+  println(RList.from(1 to 1000).flatMap(x => x :: (x * 2) :: RNil))
+  println("filter----")
   println(RList.from(1 to 1000).filter(_ % 2 == 0))
   println(list2.rle)
   println(RNil.rle)
