@@ -59,7 +59,7 @@ object ListPractice extends App {
       */
     // sorting the list in the order defined by the Ordering object
     def insertionSort[S >: T](ordering: Ordering[S]): RList[S]
-//    def mergeSort[S >: T](ordering: Ordering[S]): RList[S]
+    def mergeSort[S >: T](ordering: Ordering[S]): RList[S]
 //    def quickSort[S >: T](ordering: Ordering[S]): RList[S]
   }
 
@@ -81,6 +81,7 @@ object ListPractice extends App {
     override def rotate(k: Int): RList[Nothing] = this
     override def sample(k: Int): RList[Nothing] = this
     override def insertionSort[S >: Nothing](ordering: Ordering[S]): RList[S] = this
+    override def mergeSort[S >: Nothing](ordering: Ordering[S]): RList[S] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -312,14 +313,19 @@ object ListPractice extends App {
         else insertionSortTailRec(remaining.tail, insertionSorted(remaining.head, RNil, acc))
       }
 
+      @tailrec
       def insertionSorted(element: S, first: RList[S], second: RList[S]): RList[S] = {
-        if (first.isEmpty && second.isEmpty) element :: RNil
-        else if (ordering.gteq(element, second.head)) insertionSorted(element, second.head :: first, second.tail)
-        else if (ordering.lt(element, first.head))
+        if (second.isEmpty || ordering.lteq(element, second.head)) first.reverse ++ (element :: second)
+        else insertionSorted(element, second.head :: first, second.tail)
       }
 
+      insertionSortTailRec(this, RNil)
     }
 
+    override def mergeSort[S >: T](ordering: Ordering[S]): RList[S] = {
+
+      def partitionTailRec(first: RList[S], second: RList[S])
+    }
   }
 
   object RList {
@@ -358,4 +364,8 @@ object ListPractice extends App {
   Range(1, 20).foreach { x =>
     println(RList.from(1 to 20).sample(6))
   }
+  println(s"-----sort")
+  val anUnorderedList = 3 :: 1 :: 2 :: 4 :: 5 :: RNil
+  val ordering = Ordering.fromLessThan[Int](_ < _)
+  println(anUnorderedList.insertionSort(ordering))
 }
