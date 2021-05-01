@@ -54,11 +54,11 @@ object ListPractice extends App {
     // random sample
     def sample(k: Int): RList[T]
 
-//    /**
-//      * Hard problems
-//      */
-//    // sorting the list in the order defined by the Ordering object
-//    def insertionSort[S >: T](ordering: Ordering[S]): RList[S]
+    /**
+      * Hard problems
+      */
+    // sorting the list in the order defined by the Ordering object
+    def insertionSort[S >: T](ordering: Ordering[S]): RList[S]
 //    def mergeSort[S >: T](ordering: Ordering[S]): RList[S]
 //    def quickSort[S >: T](ordering: Ordering[S]): RList[S]
   }
@@ -80,6 +80,7 @@ object ListPractice extends App {
     override def duplicateEach(k: Int): RList[Nothing] = this
     override def rotate(k: Int): RList[Nothing] = this
     override def sample(k: Int): RList[Nothing] = this
+    override def insertionSort[S >: Nothing](ordering: Ordering[S]): RList[S] = this
   }
 
   case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -299,6 +300,26 @@ object ListPractice extends App {
         elegantSample()
       }
     }
+
+    /**
+      * Hard problems
+      */
+    override def insertionSort[S >: T](ordering: Ordering[S]): RList[S] = {
+
+      @tailrec
+      def insertionSortTailRec(remaining: RList[S], acc: RList[S]): RList[S] = {
+        if (remaining.isEmpty) acc
+        else insertionSortTailRec(remaining.tail, insertionSorted(remaining.head, RNil, acc))
+      }
+
+      def insertionSorted(element: S, first: RList[S], second: RList[S]): RList[S] = {
+        if (first.isEmpty && second.isEmpty) element :: RNil
+        else if (ordering.gteq(element, second.head)) insertionSorted(element, second.head :: first, second.tail)
+        else if (ordering.lt(element, first.head))
+      }
+
+    }
+
   }
 
   object RList {
