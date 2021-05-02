@@ -324,7 +324,8 @@ object ListPractice extends App {
 
     override def mergeSort[S >: T](ordering: Ordering[S]): RList[S] = {
 
-      def partitionTailRec(first: RList[S], second: RList[S])
+//      def partitionTailRec(first: RList[S], second: RList[S])
+      ???
     }
   }
 
