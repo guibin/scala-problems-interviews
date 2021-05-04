@@ -62,5 +62,30 @@ object TreePractice extends App {
 //    def toList: List[T]
   }
 
+  case object End extends Tree[Nothing] {
+    override def value: Nothing = throw new NoSuchElementException
+    override def left: Tree[Nothing] = throw new NoSuchElementException
+    override def right: Tree[Nothing] = throw new NoSuchElementException
+    override def isEmpty: Boolean = true
 
+    /**
+      * Easy problems
+      */
+    override def isLeaf: Boolean = false
+    override def collectLeaves: List[Tree[Nothing]] = List()
+    override def leafCount: Int = 0
+  }
+
+  case class Node[+T](override val value: T, override val left: Tree[T], override val right: Tree[T]) extends Tree[T] {
+    override def isEmpty: Boolean = false
+
+    /**
+      * Easy problems
+      */
+    override def isLeaf: Boolean = left == End && right == End
+
+    override def collectLeaves: List[Tree[T]] = ???
+
+    override def leafCount: Int = ???
+  }
 }
