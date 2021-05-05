@@ -1,5 +1,7 @@
 package com.rockthejvm.trees
 
+import scala.annotation.tailrec
+
 object TreePractice extends App {
 
   sealed abstract class Tree[+T] {
@@ -19,7 +21,7 @@ object TreePractice extends App {
       * Medium difficulty problems
       */
     // the number of nodes in the tree
-//    def size: Int
+    def size: Int
 
     // nodes at a given level
 //    def collectNodes(level: Int): List[Tree[T]]
@@ -74,6 +76,7 @@ object TreePractice extends App {
     override def isLeaf: Boolean = false
     override def collectLeaves: List[Tree[Nothing]] = List()
     override def leafCount: Int = 0
+    override def size: Int = 0
   }
 
   case class Node[+T](override val value: T, override val left: Tree[T], override val right: Tree[T]) extends Tree[T] {
@@ -84,8 +87,93 @@ object TreePractice extends App {
       */
     override def isLeaf: Boolean = left == End && right == End
 
-    override def collectLeaves: List[Tree[T]] = ???
+    override def collectLeaves: List[Tree[T]] = {
+      @tailrec
+      def collectLeavesTailRec(remaining: List[Tree[T]], acc: List[Tree[T]]): List[Tree[T]] = {
+        if (remaining.isEmpty) acc
+        else if (remaining.head.isLeaf) collectLeavesTailRec(remaining.tail, remaining.head :: acc)
+        else if (remaining.head.isEmpty) collectLeavesTailRec(remaining.tail, acc)
+        else {
+          val curr = remaining.head
+          collectLeavesTailRec(curr.left :: curr.right :: remaining.tail, acc)
+        }
+      }
 
-    override def leafCount: Int = ???
+      collectLeavesTailRec(List(this), Nil)
+    }
+
+    override def leafCount: Int = {
+      collectLeaves.length
+    }
+
+    override val size = 1 + left.size + right.size
+
+    /**
+      * Medium difficulty problems
+      */
+    def size2: Int = {
+      @tailrec
+      def sizeTailRec(remaining: List[Tree[T]], acc: Int): Int = {
+        if (remaining.isEmpty) acc
+        else {
+          val curr = remaining.head
+          if (curr.isEmpty) sizeTailRec(remaining.tail, acc)
+          else if (!curr.left.isEmpty && !curr.right.isEmpty)  sizeTailRec(curr.left :: curr.right :: remaining.tail, 1 + acc)
+          else if (!curr.left.isEmpty) sizeTailRec(curr.left :: remaining.tail, 1 + acc)
+          else sizeTailRec(curr.right :: remaining.tail, 1 + acc)
+        }
+      }
+      sizeTailRec(List(this), 0)
+    }
   }
+
+  val tree = Node(1,
+    Node(2,
+      Node(3, End, End),
+      Node(4,
+        End,
+        Node(5, End, End),
+      )
+    ),
+    Node(6,
+      Node(7, End, End),
+      Node(8, End, End)
+    )
+  )
+
+  val tree10x = Node(10,
+    Node(20,
+      Node(30, End, End),
+      Node(40,
+        End,
+        Node(50, End, End),
+      )
+    ),
+    Node(60,
+      Node(70, End, End),
+      Node(80, End, End)
+    )
+  )
+
+  val tree10xExtra = Node(10,
+    Node(20,
+      Node(30, End, End),
+      Node(40,
+        End,
+        End
+      )
+    ),
+    Node(60,
+      Node(70, End, End),
+      Node(80, End, End)
+    )
+  )
+
+  println("------collectLeaves")
+  println(tree.collectLeaves.map(_.value))
+  println("------size")
+  println(tree.size)
+  val largeTree = (1 to 100000).foldLeft[Tree[Int]](End)((tree, number) => Node(number, tree, End))
+  println(largeTree.size)
+
 }
