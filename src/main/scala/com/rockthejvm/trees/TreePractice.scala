@@ -24,7 +24,7 @@ object TreePractice extends App {
     def size: Int
 
     // nodes at a given level
-//    def collectNodes(level: Int): List[Tree[T]]
+    def collectNodes(level: Int): List[Tree[T]]
 
     // mirror a tree
     /*
@@ -77,6 +77,7 @@ object TreePractice extends App {
     override def collectLeaves: List[Tree[Nothing]] = List()
     override def leafCount: Int = 0
     override def size: Int = 0
+    override def collectNodes(level: Int): List[Tree[Nothing]] = List()
   }
 
   case class Node[+T](override val value: T, override val left: Tree[T], override val right: Tree[T]) extends Tree[T] {
@@ -124,6 +125,35 @@ object TreePractice extends App {
         }
       }
       sizeTailRec(List(this), 0)
+    }
+
+    override def collectNodes(level: Int): List[Tree[T]] = {
+      @tailrec
+      def collectNodesTailRec(currentLevel: Int, acc: List[Tree[T]]): List[Tree[T]] = {
+        if (acc.isEmpty) List()
+        else if (currentLevel == level) acc
+        else {
+          val expanded = acc.flatMap { node =>
+            if (!node.isEmpty) List(node.left, node.right)
+            else List()
+          }
+          collectNodesTailRec(currentLevel + 1, expanded)
+        }
+      }
+
+      def collectNodesTailRec2(currentLevel: Int, acc: List[Tree[T]]): List[Tree[T]] = {
+        if (acc.isEmpty) List()
+        else if (currentLevel == level) acc
+        else {
+          val expanded = for {
+            node <- acc
+            child <- List(node.left, node.right) if(!node.isEmpty)
+          } yield child
+
+          collectNodesTailRec2(currentLevel + 1, expanded)
+        }
+      }
+      collectNodesTailRec2(0, List(this))
     }
   }
 
@@ -175,5 +205,7 @@ object TreePractice extends App {
   println(tree.size)
   val largeTree = (1 to 100000).foldLeft[Tree[Int]](End)((tree, number) => Node(number, tree, End))
   println(largeTree.size)
+  println("-------collectNodes")
+  println(largeTree.collectNodes(0))
 
 }
